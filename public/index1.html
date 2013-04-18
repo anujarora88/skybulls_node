@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.js"></script>
+    <script type="text/javascript" src="http://cdn.socket.io/stable/socket.io.js"></script>
+    <script type="text/javascript">
+        (function( $ ){
+            $.customEventHandler = function() {
+                var socket = new io.Socket(null, {port: 8080});
+                handler = {};
+
+                socket.connect();
+                socket.on('message', function(obj){
+                    if('event' in obj) {
+                        $(handler).trigger(obj.event, obj.data);
+                    }
+                });
+
+                handler._trigger = function(event, data) {
+                    socket.send({"event" : event, "data" : data});
+                }
+
+                handler.GetTime = function() {
+                    handler._trigger('getTime', '');
+                }
+
+                return handler;
+            }
+        })( jQuery );
+
+        $(document).ready(function(){
+            var customEventHandler = $.customEventHandler();
+
+            $(customEventHandler).bind('sendTime', function(event, time){
+                $('#divTime').text('Time in server:' + time);
+            });
+
+            $(customEventHandler).bind('sendAnnouncement', function(event, announcement){
+                $('#divTime').text(announcement);
+            });
+
+            $('#btnGetTime').click(function(){
+                customEventHandler.GetTime();
+            });
+        });
+    </script>
+</head>
+<body>
+<div id="divTime"></div>
+<input type="button" id="btnGetTime" value="Get Server Time">
+</body>
+</html>
