@@ -7,7 +7,7 @@
 |       adaptStockDataObj : function(obj){
 |                                            return {
 |                                                    "date": new Date(obj["date"]*1000),
-|                                                    "value": obj["close"],
+|                                                    "value": obj["price"],
 |                                                    "volume": obj["volume"]
 |                                                  }
 |                                         },
@@ -79,7 +79,7 @@
 |                   cursorSettings.valueBalloonsEnabled = true;
 |                   chart.chartCursorSettings = cursorSettings;
 |               // PERIOD SELECTOR ///////////////////////////////////
-|               var periodSelector = new AmCharts.PeriodSelector();
+|               var periodSelector = new AmCharts.PeriodSelector({dateFormat: "MM-DD-YYYY"});
 |               periodSelector.position = "left";
 |               periodSelector.periods = [
 |               {
@@ -92,7 +92,8 @@
 |                   count: 8*3600,
 |                   label: "Current Day"},
 |               {
-|                  count: 5,
+|                  count: 5*24,
+|                    period: "hh",
 |                   label: "5 Days"},
 |               {
 |                   period: "MM",
@@ -114,7 +115,8 @@
 |               skybullsData["chart"] =  chart;
 |           }
 |  };
-| var socket = io.connect('http://localhost/');
+| var socket = io.connect('http://localhost:8082');
+|  skybullsData["socket"] = socket;
 |  socket.on('connect', function () {
 |    socket.emit('start feed', !{queryStr});
 |    socket.on('graph data', function(data){
@@ -137,6 +139,7 @@
 |       }
 |    });
 |    socket.on('new graph data', function(data){
+|       data = JSON.parse(data);
 |      var chart = skybullsData["chart"];
 |       if(chart){
 |            var dataMap = skybullsData.generateDataFromMap(data.data);
@@ -160,9 +163,10 @@
 |       }
 |    });
 |    socket.on('latest data', function(data){
-|         for(var key in data){
-|            if(data.hasOwnProperty(key)){
-|                stockInfoArea.updateStockInfo(key, data[key]);
+|         var dataMap = data.data
+|         for(var key in dataMap){
+|            if(dataMap.hasOwnProperty(key)){
+|                stockInfoArea.updateStockInfo(key, dataMap[key]);
 |             }
 |         }
 |    });

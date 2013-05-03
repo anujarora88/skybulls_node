@@ -90,7 +90,7 @@ socketIO.sockets.on('connection', function (socket) {
     socket.on('add graph', function (data) {
         var graphStocks =  [data.graph];
         stockDataAccessor.getAllDataForMultipleSymbols(graphStocks, function(dataMap){
-            socket.emit("new graph data", {"data": dataMap});
+            socket.emit("new graph data", JSON.stringify({"data": dataMap}));
         });
 
         socket.get("graph", function (err, message) {
@@ -121,7 +121,7 @@ var job = new cronJob({
 });
 job.start();
 
-setInterval(socketIOHandler.pushLatestData, 15000);
+setInterval(socketIOHandler.pushLatestData, 11000);
 
 
 
