@@ -38,10 +38,7 @@ app.configure(function(){
     app.set('port', process.env.PORT || 8082);
     app.set('views', __dirname + '/views');
     app.set('view engine', 'jade');
-    app.use(express.favicon());
     app.use(express.logger('dev'));
-    app.use(express.bodyParser());
-    app.use(express.methodOverride());
     app.use(express.cookieParser('your secret here'));
     app.use(express.session());
     app.use(app.router);
@@ -57,8 +54,8 @@ app.use('/getFeed',function(req, res){
 
     stockDataAccessor.getAllDataForMultipleSymbols(graphStocks, function(dataMap){
         var reqObj = {"graph": req.query.graph, "latest": req.query.latest};
-
-        res.render(__dirname + '/views/index.jade', {
+        res.contentType("text/javascript");
+        res.render(__dirname + '/views/javascript.jade', {
             title: "Skybulls", queryStr: JSON.stringify(reqObj), dataMap: JSON.stringify(dataMap)
         });
     });
@@ -81,6 +78,28 @@ socketIO.sockets.on('connection', function (socket) {
         socket.set("graph", data.graph);
         socket.set("latest", data.latest);
     });
+
+    socket.on('add latest', function (data) {
+        socket.get("latest", function (err, message) {
+            if(message) {
+                socket.set("latest", message + ","+ data.latest);
+            }
+        });
+    });
+
+    socket.on('add graph', function (data) {
+        var graphStocks =  [data.graph];
+        stockDataAccessor.getAllDataForMultipleSymbols(graphStocks, function(dataMap){
+            socket.emit("new graph data", {"data": dataMap});
+        });
+
+        socket.get("graph", function (err, message) {
+            if(message) {
+                socket.set("graph", message + ","+ data.graph);
+            }
+        });
+
+    });
 });
 
 var socketIOModule = require('./lib/SocketIOModule.js');
@@ -102,7 +121,7 @@ var job = new cronJob({
 });
 job.start();
 
-setInterval(socketIOHandler.pushLatestData, 15000)
+setInterval(socketIOHandler.pushLatestData, 15000);
 
 
 
