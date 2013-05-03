@@ -13,7 +13,8 @@
     "time": "*",
     "mysql": "2.0.0-alpha7",
     "clone": "*",
-    "socket.io": "*"
+    "socket.io": "*",
+    "querystring": "*"
 
   }
 }

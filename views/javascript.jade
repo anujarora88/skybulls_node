@@ -115,7 +115,7 @@
 |               skybullsData["chart"] =  chart;
 |           }
 |  };
-| var socket = io.connect('http://localhost:8082');
+| var socket = io.connect('http://skybulls-local.com:8082');
 |  skybullsData["socket"] = socket;
 |  socket.on('connect', function () {
 |    socket.emit('start feed', !{queryStr});
