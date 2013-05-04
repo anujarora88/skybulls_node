@@ -100,6 +100,7 @@ socketIO.sockets.on('connection', function (socket) {
         });
 
     });
+
 });
 
 var socketIOModule = require('./lib/SocketIOModule.js');
@@ -111,17 +112,16 @@ var diObj = new DataImporterModule.DataImporter({"securities": listed_securities
 
 var cronJob = require('cron').CronJob;
 var job = new cronJob({
-    cronTime: '*/5 * * * * 1-5',
+    cronTime: '*/5 * * * * *',
     onTick: function() {
 
         diObj.execute(function(){});
     },
-    start: false,
-    timeZone: "CLST"
+    start: false
 });
 job.start();
 
-setInterval(socketIOHandler.pushLatestData, 11000);
+setInterval(socketIOHandler.pushLatestData, 5000);
 
 
 
