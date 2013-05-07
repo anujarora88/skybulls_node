@@ -1,7 +1,7 @@
   skybullsData = {
 
         initTransfer : function(graphData, latestData, callback){
-            var socket = io.connect("http://localhost:8082");
+            var socket = io.connect("{{socketIOUrl}}");
               socket.on('connect', function () {
                 skybullsData["socket"] = socket;
                 socket.emit('start feed', {graph: graphData, latest: latestData});
