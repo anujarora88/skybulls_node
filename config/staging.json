@@ -3,7 +3,7 @@
     "apiSecret": "madnsmndmasdnamdasasdasdd",
     "railsAppUrl": "www.skybulls.com",
     "railsAppPort": "80",
-    "socketIOUrl": "http://node.skybulls.com",
+    "socketIOUrl": "http://node.skybulls.com:8082",
     "redisUrl": "localhost",
     "redisPort": 6379
 
