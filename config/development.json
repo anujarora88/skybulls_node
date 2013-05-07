@@ -3,6 +3,6 @@
     "apiSecret": "madnsmndmasdnamdasasdasdd",
     "railsAppUrl": "localhost",
     "railsAppPort": "3000",
-    "socketIOUrl": "http://localhost:8082"
+    "socketIOUrl": "http://skybulls-local.com:8082"
 
 }

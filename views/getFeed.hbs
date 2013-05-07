@@ -1,66 +1,9 @@
   skybullsData = {
 
         initTransfer : function(graphData, latestData, callback){
-            var socket = io.connect("{{socketIOUrl}}");
-              socket.on('connect', function () {
-                skybullsData["socket"] = socket;
-                socket.emit('start feed', {graph: graphData, latest: latestData});
-                callback();
-                socket.on('graph data', function(data){
-                  var chart = skybullsData["chart"];
-                   if(chart){
-                        var serverData = data.data;
-                               for(var key in serverData){
-                                   if(serverData.hasOwnProperty(key)){
-                                       for(ii=0; ii < chart.dataSets.length ; ii++){
-                                           var dataSet = chart.dataSets[ii];
-                                           if(key == dataSet.title){
-                                              for(var jj=0; jj < serverData[key].length; jj++){
-                                                dataSet.dataProvider.push(skybullsData.adaptStockDataObj(serverData[key][jj]));
-                                              }
-                                           }
-                                       }
-                                  }
-                              }
-                               chart.validateData();
-                   }
-                });
-                socket.on('new graph data', function(data){
-                   data = JSON.parse(data);
-                  var chart = skybullsData["chart"];
-                   if(chart){
-                        var dataMap = skybullsData.generateDataFromMap(data.data);
-                           for(var key in dataMap){
-                               if(dataMap.hasOwnProperty(key)){
-                                   var dataSet1 = new AmCharts.DataSet();
-                                   dataSet1.title = key;
-                                   dataSet1.fieldMappings = [{
-                                       fromField: "value",
-                                       toField: "value"},
-                                       {
-                                           fromField: "volume",
-                                           toField: "volume"}];
-                                   dataSet1.dataProvider = dataMap[key];
-                                   dataSet1.categoryField = "date";
-                                   chart.dataSets.push(dataSet1);
-                               }
-                           }
-                           // set data sets to the chart
-                   chart.validateData();
-                   }
-                });
-                socket.on('latest data', function(data){
-                     var dataMap = data.data
-                     for(var key in dataMap){
-                        if(dataMap.hasOwnProperty(key)){
-                            stockInfoArea.updateStockInfo(key, dataMap[key]);
-                         }
-                     }
-                });
-                socket.on('init graph', function(data){
-                     skybullsData.createStockChart(skybullsData.generateDataFromMap(data.data));
-                });
-              });
+              if(skybullsData.socket){
+                  callback();
+              }
 
         },
 
@@ -69,6 +12,8 @@
                                   skybullsData["graphDivId"] = divId;
                                   if (typeof skybullsData["socket"] !== 'undefined'){
                                      skybullsData["socket"].emit('init graph');
+                                  }else{
+
                                   }
 
        },
@@ -94,7 +39,7 @@
            return adaptedMap;
          },
          createStockChart : function(dataMap) {
-                var chartDivId = skybullsData.graphDivId;
+                var chartDivId = "{{chartDiv}}";
                var chart = new AmCharts.AmStockChart();
                chart.pathToImages = "http://www.amcharts.com/lib/images/";
                var categoryAxesSettings = new AmCharts.CategoryAxesSettings();
@@ -181,4 +126,66 @@
                skybullsData["chart"] =  chart;
            }
   };
+
+  var socket = io.connect('{{socketIOUrl}}');
+    socket.on('connect', function () {
+      skybullsData["socket"] = socket;
+      socket.emit('start feed', {{{queryStr}}});
+      socket.emit('init graph', {{{queryStr}}});
+      socket.on('graph data', function(data){
+        var chart = skybullsData["chart"];
+         if(chart){
+              var serverData = data.data;
+                     for(var key in serverData){
+                         if(serverData.hasOwnProperty(key)){
+                             for(ii=0; ii < chart.dataSets.length ; ii++){
+                                 var dataSet = chart.dataSets[ii];
+                                 if(key == dataSet.title){
+                                    for(var jj=0; jj < serverData[key].length; jj++){
+                                      dataSet.dataProvider.push(skybullsData.adaptStockDataObj(serverData[key][jj]));
+                                    }
+                                 }
+                             }
+                        }
+                    }
+                     chart.validateData();
+         }
+      });
+      socket.on('new graph data', function(data){
+         data = JSON.parse(data);
+        var chart = skybullsData["chart"];
+         if(chart){
+              var dataMap = skybullsData.generateDataFromMap(data.data);
+                 for(var key in dataMap){
+                     if(dataMap.hasOwnProperty(key)){
+                         var dataSet1 = new AmCharts.DataSet();
+                         dataSet1.title = key;
+                         dataSet1.fieldMappings = [{
+                             fromField: "value",
+                             toField: "value"},
+                             {
+                                 fromField: "volume",
+                                 toField: "volume"}];
+                         dataSet1.dataProvider = dataMap[key];
+                         dataSet1.categoryField = "date";
+                         chart.dataSets.push(dataSet1);
+                     }
+                 }
+                 // set data sets to the chart
+         chart.validateData();
+         }
+      });
+      socket.on('latest data', function(data){
+           var dataMap = data.data
+           for(var key in dataMap){
+              if(dataMap.hasOwnProperty(key)){
+                  stockInfoArea.updateStockInfo(key, dataMap[key]);
+               }
+           }
+      });
+      socket.on('init graph', function(data){
+           skybullsData.createStockChart(skybullsData.generateDataFromMap(data.data));
+      });
+    });
+
 

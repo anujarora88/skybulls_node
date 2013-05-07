@@ -61,7 +61,7 @@ app.use('/getFeed',function(req, res){
     var hmac = crypto.createHmac('sha1', CONFIG.apiSecret);
     if (apiKey && confirmKey && hmac.update(timestamp+apiKey).digest('hex') == confirmKey && ((new Date()).getTime() - (new Date(parseInt(timestamp)*1000)).getTime())/1000 < 10 ){
         res.contentType("text/javascript");
-        res.render('getFeed', {socketIOUrl: CONFIG.socketIOUrl, title: "Skybulls"});
+        res.render('getFeed', {socketIOUrl: CONFIG.socketIOUrl, chartDiv: req.query.chartDiv,  queryStr: JSON.stringify({graph: req.query.graph, latest: req.query.latest})});
     }else{
         res.send(401, 'Please provide an api key and confirmation key!');
     }
@@ -94,14 +94,22 @@ socketIO.sockets.on('connection', function (socket) {
     });
 
     socket.on('init graph', function (data) {
-        socket.get("graph", function (err, message) {
-            if(message) {
-                var stocks = message.split(",");
-                stockDataAccessor.getAllDataForMultipleSymbols(stocks, function(dataMap){
-                    socket.emit("init graph", {"data": dataMap});
-                });
-            }
-        });
+        if(data.graph){
+            var stocks = data.graph.split(",");
+            stockDataAccessor.getAllDataForMultipleSymbols(stocks, function(dataMap){
+                socket.emit("init graph", {"data": dataMap});
+            });
+        }else{
+            socket.get("graph", function (err, message) {
+                if(message) {
+                    var stocks = message.split(",");
+                    stockDataAccessor.getAllDataForMultipleSymbols(stocks, function(dataMap){
+                        socket.emit("init graph", {"data": dataMap});
+                    });
+                }
+            });
+        }
+
     });
 
     socket.on('add latest', function (data) {
