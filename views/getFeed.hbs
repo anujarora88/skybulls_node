@@ -1,0 +1,184 @@
+  skybullsData = {
+
+        initTransfer : function(graphData, latestData, callback){
+            var socket = io.connect("http://localhost:8082");
+              socket.on('connect', function () {
+                skybullsData["socket"] = socket;
+                socket.emit('start feed', {graph: graphData, latest: latestData});
+                callback();
+                socket.on('graph data', function(data){
+                  var chart = skybullsData["chart"];
+                   if(chart){
+                        var serverData = data.data;
+                               for(var key in serverData){
+                                   if(serverData.hasOwnProperty(key)){
+                                       for(ii=0; ii < chart.dataSets.length ; ii++){
+                                           var dataSet = chart.dataSets[ii];
+                                           if(key == dataSet.title){
+                                              for(var jj=0; jj < serverData[key].length; jj++){
+                                                dataSet.dataProvider.push(skybullsData.adaptStockDataObj(serverData[key][jj]));
+                                              }
+                                           }
+                                       }
+                                  }
+                              }
+                               chart.validateData();
+                   }
+                });
+                socket.on('new graph data', function(data){
+                   data = JSON.parse(data);
+                  var chart = skybullsData["chart"];
+                   if(chart){
+                        var dataMap = skybullsData.generateDataFromMap(data.data);
+                           for(var key in dataMap){
+                               if(dataMap.hasOwnProperty(key)){
+                                   var dataSet1 = new AmCharts.DataSet();
+                                   dataSet1.title = key;
+                                   dataSet1.fieldMappings = [{
+                                       fromField: "value",
+                                       toField: "value"},
+                                       {
+                                           fromField: "volume",
+                                           toField: "volume"}];
+                                   dataSet1.dataProvider = dataMap[key];
+                                   dataSet1.categoryField = "date";
+                                   chart.dataSets.push(dataSet1);
+                               }
+                           }
+                           // set data sets to the chart
+                   chart.validateData();
+                   }
+                });
+                socket.on('latest data', function(data){
+                     var dataMap = data.data
+                     for(var key in dataMap){
+                        if(dataMap.hasOwnProperty(key)){
+                            stockInfoArea.updateStockInfo(key, dataMap[key]);
+                         }
+                     }
+                });
+                socket.on('init graph', function(data){
+                     skybullsData.createStockChart(skybullsData.generateDataFromMap(data.data));
+                });
+              });
+
+        },
+
+
+       initGraph : function(divId){
+                                  skybullsData["graphDivId"] = divId;
+                                  if (typeof skybullsData["socket"] !== 'undefined'){
+                                     skybullsData["socket"].emit('init graph');
+                                  }
+
+       },
+       adaptStockDataObj : function(obj){
+                                            return {
+                                                    "date": new Date(obj["date"]*1000),
+                                                    "value": obj["price"],
+                                                    "volume": obj["volume"]
+                                                  }
+                                         },
+
+       generateDataFromMap: function(dataMap) {
+            var adaptedMap = {};
+           for(var key in dataMap){
+             if (dataMap.hasOwnProperty(key)){
+                adaptedMap[key] = [];
+                for(var ii=0; ii< dataMap[key].length; ii++){
+                    var obj = JSON.parse(dataMap[key][ii]);
+                    adaptedMap[key].push(skybullsData.adaptStockDataObj(obj));
+                }
+             }
+           }
+           return adaptedMap;
+         },
+         createStockChart : function(dataMap) {
+                var chartDivId = skybullsData.graphDivId;
+               var chart = new AmCharts.AmStockChart();
+               chart.pathToImages = "http://www.amcharts.com/lib/images/";
+               var categoryAxesSettings = new AmCharts.CategoryAxesSettings();
+                   categoryAxesSettings.minPeriod = "ss";
+                   chart.categoryAxesSettings = categoryAxesSettings;
+               var dataSets = [];
+               for(var key in dataMap){
+                   if(dataMap.hasOwnProperty(key)){
+                       var dataSet1 = new AmCharts.DataSet();
+                       dataSet1.title = key;
+                       dataSet1.fieldMappings = [{
+                           fromField: "value",
+                           toField: "value"},
+                           {
+                               fromField: "volume",
+                               toField: "volume"}];
+                       dataSet1.dataProvider = dataMap[key];
+                       dataSet1.categoryField = "date";
+                       dataSets.push(dataSet1);
+                   }
+               }
+               // set data sets to the chart
+               chart.dataSets = dataSets;
+               chart.mainDataSet = dataSets[0];
+               // PANELS ///////////////////////////////////////////
+               // first stock panel
+               var stockPanel1 = new AmCharts.StockPanel();
+               stockPanel1.showCategoryAxis = true;
+               stockPanel1.title = "Value";
+               // graph of first stock panel
+               var graph1 = new AmCharts.StockGraph();
+               graph1.valueField = "value";
+               graph1.comparable = true;
+               graph1.compareField = "value";
+               graph1.showBalloon = true;
+               graph1.type = "smoothedLine";
+               stockPanel1.addStockGraph(graph1);
+               // create stock legend
+               stockPanel1.stockLegend = new AmCharts.StockLegend();
+               // set panels to the chart
+               chart.panels = [stockPanel1];
+               // OTHER SETTINGS ////////////////////////////////////
+               var sbsettings = new AmCharts.ChartScrollbarSettings();
+               sbsettings.graph = graph1;
+               sbsettings.usePeriod = "WW";
+               chart.chartScrollbarSettings = sbsettings;
+               var cursorSettings = new AmCharts.ChartCursorSettings();
+                   cursorSettings.valueBalloonsEnabled = true;
+                   chart.chartCursorSettings = cursorSettings;
+               // PERIOD SELECTOR ///////////////////////////////////
+               var periodSelector = new AmCharts.PeriodSelector({dateFormat: "MM-DD-YYYY"});
+               periodSelector.position = "left";
+               periodSelector.periods = [
+               {
+                   period: "ss",
+                   count: 1*3600,
+                   selected: true,
+                   label: "Current Hour"},
+               {
+                   period: "ss",
+                   count: 8*3600,
+                   label: "Current Day"},
+               {
+                  count: 5*24,
+                    period: "hh",
+                   label: "5 Days"},
+               {
+                   period: "MM",
+                   count: 1,
+                   label: "1 Month"},
+               {
+                   period: "YYYY",
+                   count: 1,
+                   label: "1 year"},
+               {
+                   period: "MAX",
+                   label: "MAX"}];
+               chart.periodSelector = periodSelector;
+               // DATA SET SELECTOR
+               var dataSetSelector = new AmCharts.DataSetSelector();
+               dataSetSelector.position = "left";
+               chart.dataSetSelector = dataSetSelector;
+               chart.write(chartDivId);
+               skybullsData["chart"] =  chart;
+           }
+  };
+

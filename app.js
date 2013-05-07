@@ -12,18 +12,34 @@ var express = require('express')
     util = require('util'),
     sys = require('sys'),
     io = require('socket.io'),
-    fs = require('fs')
-    ;
+    fs = require('fs');
+
+var app = express();
+
+app.configure(function(){
+    app.set('port', process.env.PORT || 8082);
+    app.set('views', __dirname + '/views');
+    app.set('view engine', 'hbs');
+    app.use(express.logger('dev'));
+    app.use(express.cookieParser('your secret here'));
+    app.use(express.session());
+    app.use(app.router);
+    app.use(express.static(path.join(__dirname, 'public')));
+});
+
+
+
+var CONFIG = require("config");
 
 
 var redis = require('redis');
-var db = redis.createClient(6379, "localhost");
+var db = redis.createClient(CONFIG.redisPort, CONFIG.redisUrl);
 
 db.on("error", function (err){
     console.log("Error " + err);
 });
 
-var app = express();
+
 
 var listed_securities = ["NASDAQ:MSFT","NASDAQ:YHOO","NASDAQ:FB","NASDAQ:AAPL","NASDAQ:ORCL"];
 
@@ -34,33 +50,12 @@ var stockDataAccessor = new StockDataModule.StockDataAccessor({"redis": redis, "
 
 
 
-app.configure(function(){
-    app.set('port', process.env.PORT || 8082);
-    app.set('views', __dirname + '/views');
-    app.set('view engine', 'jade');
-    app.use(express.logger('dev'));
-    app.use(express.cookieParser('your secret here'));
-    app.use(express.session());
-    app.use(app.router);
-    app.use(express.static(path.join(__dirname, 'public')));
-});
 
 
 
 app.use('/getFeed',function(req, res){
-    //send out graph data
-    var graphQuery = req.query.graph;
-    var graphStocks = graphQuery.split(",");
-
-    stockDataAccessor.getAllDataForMultipleSymbols(graphStocks, function(dataMap){
-        var reqObj = {"graph": req.query.graph, "latest": req.query.latest};
-        res.contentType("text/javascript");
-        res.render(__dirname + '/views/javascript.jade', {
-            title: "Skybulls", queryStr: JSON.stringify(reqObj), dataMap: JSON.stringify(dataMap)
-        });
-    });
-
-
+    res.contentType("text/javascript");
+    res.render('getFeed', {socketIOUrl: CONFIG.socketIOUrl, title: "Skybulls"});
 });
 
 
@@ -75,8 +70,23 @@ var server = http.createServer(app).listen(app.get('port'), function(){
 var socketIO = io.listen(server);
 socketIO.sockets.on('connection', function (socket) {
     socket.on('start feed', function (data) {
-        socket.set("graph", data.graph);
-        socket.set("latest", data.latest);
+        if(data.graph){
+            socket.set("graph", data.graph);
+        }
+        if(data.latest){
+            socket.set("latest", data.latest);
+        }
+    });
+
+    socket.on('init graph', function (data) {
+        socket.get("graph", function (err, message) {
+            if(message) {
+                var stocks = message.split(",");
+                stockDataAccessor.getAllDataForMultipleSymbols(stocks, function(dataMap){
+                    socket.emit("init graph", {"data": dataMap});
+                });
+            }
+        });
     });
 
     socket.on('add latest', function (data) {

@@ -1,0 +1,8 @@
+{
+    "apiKey": "sajdnbjkasdasmdnjasdasd",
+    "apiSecret": "madnsmndmasdnamdasasdasdd",
+    "railsAppUrl": "localhost",
+    "railsAppPort": "3000",
+    "socketIOUrl": "http://localhost:8082"
+
+}

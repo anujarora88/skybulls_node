@@ -1,0 +1,10 @@
+{
+    "apiKey": "sajdnbjkasdasmdnjasdasd",
+    "apiSecret": "madnsmndmasdnamdasasdasdd",
+    "railsAppUrl": "http://www.skybulls.com",
+    "railsAppPort": "80",
+    "socketIOUrl": "http://node.skybulls.com",
+    "redisUrl": "localhost",
+    "redisPort": 6379
+
+}
