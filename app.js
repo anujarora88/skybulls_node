@@ -12,7 +12,8 @@ var express = require('express')
     util = require('util'),
     sys = require('sys'),
     io = require('socket.io'),
-    fs = require('fs');
+    fs = require('fs'),
+    crypto = require('crypto');
 
 var app = express();
 
@@ -54,8 +55,22 @@ var stockDataAccessor = new StockDataModule.StockDataAccessor({"redis": redis, "
 
 
 app.use('/getFeed',function(req, res){
-    res.contentType("text/javascript");
-    res.render('getFeed', {socketIOUrl: CONFIG.socketIOUrl, title: "Skybulls"});
+    var apiKey = req.query.apiKey;
+    var timestamp = req.query.timestamp;
+    var confirmKey = req.query.confirmKey;
+    var hmac = crypto.createHmac('sha1', CONFIG.apiSecret);
+    if (apiKey && confirmKey && hmac.update(timestamp+apiKey).digest('hex') == confirmKey && ((new Date()).getTime() - (new Date(parseInt(timestamp)*1000)).getTime())/1000 < 10 ){
+        res.contentType("text/javascript");
+        res.render('getFeed', {socketIOUrl: CONFIG.socketIOUrl, title: "Skybulls"});
+    }else{
+        res.send(401, 'Please provide an api key and confirmation key!');
+    }
+
+});
+
+app.use(function(err, req, res, next){
+    console.error(err.stack);
+    res.send(500, 'Something broke!');
 });
 
 

@@ -15,7 +15,8 @@
     "clone": "*",
     "socket.io": "*",
     "querystring": "*",
-    "config": "*"
+    "config": "*",
+    "crypto": "*"
 
   }
 }
