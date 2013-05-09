@@ -131,7 +131,9 @@
     socket.on('connect', function () {
       skybullsData["socket"] = socket;
       socket.emit('start feed', {{{queryStr}}});
-      socket.emit('init graph', {{{queryStr}}});
+      {{#if chartDiv}}
+        socket.emit('init graph', {{{queryStr}}});
+      {{/if}}
       socket.on('graph data', function(data){
         var chart = skybullsData["chart"];
          if(chart){
