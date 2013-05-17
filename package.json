@@ -16,6 +16,7 @@
     "socket.io": "*",
     "querystring": "*",
     "config": "*",
+    "nodetime": "*",
     "crypto": "*"
 
   }

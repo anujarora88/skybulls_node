@@ -28,6 +28,12 @@ app.configure(function(){
     app.use(express.static(path.join(__dirname, 'public')));
 });
 
+app.configure('production', function(){
+    require('nodetime').profile({
+        accountKey: '074c09b05e3f0a23b52cc592ee699b6f3dc1e3ff',
+        appName: 'Skybulls Node.js Application'
+    });
+});
 
 
 var CONFIG = require("config");
