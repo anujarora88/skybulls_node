@@ -5,6 +5,7 @@
     "railsAppPort": "80",
     "socketIOUrl": "http://node.skybulls.com",
     "redisUrl": "localhost",
-    "redisPort": 6379
+    "redisPort": 6379,
+    "rabbitmqHost": "localhost"
 
 }
