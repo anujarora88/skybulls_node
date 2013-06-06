@@ -1,7 +1,7 @@
 {
     "apiKey": "sajdnbjkasdasmdnjasdasd",
     "apiSecret": "madnsmndmasdnamdasasdasdd",
-    "railsUrl": "skybulls.anujarora.me",
+    "railsAppUrl": "skybulls.anujarora.me",
     "railsAppPort": "80",
     "socketIOUrl": "http://skybullsnode.anujarora.me:8082",
     "redisUrl": "localhost",
