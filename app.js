@@ -162,7 +162,7 @@ var diObj = new DataImporterModule.DataImporter({"securities": listed_securities
 
 var cronJob = require('cron').CronJob;
 var job = new cronJob({
-    cronTime: '5 * * * * *',
+    cronTime: '*/5 * * * * *',
     onTick: function() {
 
         diObj.execute(function(){});
