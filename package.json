@@ -17,8 +17,7 @@
     "querystring": "*",
     "config": "*",
     "nodetime": "*",
-    "crypto": "*",
-    "amqp": "*"
+    "crypto": "*"
 
   }
 }

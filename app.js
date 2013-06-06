@@ -35,6 +35,13 @@ app.configure('production', function(){
     });
 });
 
+app.configure('staging', function(){
+    require('nodetime').profile({
+        accountKey: '074c09b05e3f0a23b52cc592ee699b6f3dc1e3ff',
+        appName: 'Skybulls Node.js staging Application'
+    });
+});
+
 
 var CONFIG = require("config");
 
@@ -145,7 +152,7 @@ socketIO.sockets.on('connection', function (socket) {
 var socketIOModule = require('./lib/SocketIOModule.js');
 var socketIOHandler = new socketIOModule.SocketIOHandler({"socketIO": socketIO});
 
-var rabbitmqConnection = require('amqp').createConnection({ host: CONFIG.rabbitmqHost }, {defaultExchangeName: "Ticker"});
+//var rabbitmqConnection = require('amqp').createConnection({ host: CONFIG.rabbitmqHost }, {defaultExchangeName: "Ticker"});
 
 
 
