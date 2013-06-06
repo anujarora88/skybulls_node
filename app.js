@@ -147,38 +147,22 @@ var socketIOHandler = new socketIOModule.SocketIOHandler({"socketIO": socketIO})
 
 var rabbitmqConnection = require('amqp').createConnection({ host: CONFIG.rabbitmqHost }, {defaultExchangeName: "Ticker"});
 
-rabbitmqConnection.on('ready', function () {
-    // Use the default 'amq.topic' exchange
-    rabbitmqConnection.queue('NASDAQ', function(q){
-        // Catch all messages
-        q.bind('#');
 
-        // Receive messages
-        q.subscribe(function (message) {
-            var infoArray = JSON.parse(message);
-            var symbol = "NASDAQ:" + infoArray[0];
-            stockDataAccessor.addLatestInfo(symbol, infoArray, function(val){
 
-            });
-            socketIOHandler.registerLatestData(symbol, infoArray)
-        });
-    });
-});
-
-/*var diObj = new DataImporterModule.DataImporter({"securities": listed_securities,
+var diObj = new DataImporterModule.DataImporter({"securities": listed_securities,
     "callback": socketIOHandler.registerLatestData ,"stockDataAccessor": stockDataAccessor});
 
 
 var cronJob = require('cron').CronJob;
 var job = new cronJob({
-    cronTime: '*//*5 * * * * *',
+    cronTime: '5 * * * * *',
     onTick: function() {
 
         diObj.execute(function(){});
     },
     start: false
 });
-job.start();*/
+job.start();
 
 setInterval(socketIOHandler.pushLatestData, 5000);
 
